@@ -1,4 +1,4 @@
-# 🌾 Crop Recommendation System
+# 🌾 SmartFarm - Crop Recommendation System
 
 ## 📊 Project Overview
 
