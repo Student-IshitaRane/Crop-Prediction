@@ -1,0 +1,149 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+df = pd.read_csv("Crop_recommendation.csv")
+print("Dataset shape:", df.shape)
+display(df)
+df.head()
+
+df.isnull()
+print("\nNull values in dataset:")
+print(df.isnull().sum())
+
+# Data Visualization
+# Using histogram to visualize feature distributions
+
+df[['N', 'P', 'K', 'temperature', 'rainfall','humidity','ph']].hist(bins=15, figsize=(12, 8))
+plt.suptitle("Feature Distribution")
+plt.show()
+
+numerical_features = df.select_dtypes(include=['number'])
+sns.heatmap(numerical_features.corr(), annot=True, cmap='YlGnBu')
+plt.title('Feature Correlation Heatmap')
+plt.show()
+
+plt.scatter(df.rainfall,df.label)
+plt.xlabel("rainfall")
+plt.show()
+
+plt.scatter(df.temperature,df.label)
+plt.xlabel("temperature")
+plt.show()
+
+df.info()
+
+# Feature Selection
+
+colm = ['N', 'P', 'K', 'temperature', 'humidity']
+x = df[colm].values
+y = df['label'].values
+
+print("\nSelected feature values (X):")
+print(x)
+
+print("\nCrop labels (y):")
+print(y)
+
+from sklearn.model_selection import train_test_split
+xtrain, xtest, ytrain, ytest = train_test_split(x, y, test_size=0.3, random_state=27)
+print("\nTraining labels:")
+print(ytrain)
+
+# Feature Scaling
+
+from sklearn.preprocessing import StandardScaler
+sc_x = StandardScaler()
+xtrain_scaled = sc_x.fit_transform(xtrain)
+xtest_scaled = sc_x.transform(xtest)
+
+print("\nScaled training data:")
+print(xtrain_scaled)
+
+print("\nScaled testing data:")
+print(xtest_scaled)
+
+# Using Logistic Regression
+
+from sklearn.linear_model import LogisticRegression
+reg_model = LogisticRegression()
+reg_model.fit(xtrain_scaled, ytrain)
+
+# Evaluating performance of the model
+
+ypredict_log = reg_model.predict(xtest_scaled)
+print("\nLogistic Regression Score:", reg_model.score(xtest_scaled, ytest))
+
+print("Logistic Regression Train Score:", reg_model.score(xtrain_scaled, ytrain))
+
+from sklearn.metrics import confusion_matrix, classification_report
+cm = confusion_matrix(ytest, ypredict_log)
+print("\nConfusion Matrix (Logistic Regression):")
+print(cm)
+
+print("\nClassification Report (Logistic Regression):")
+print(classification_report(ytest, ypredict_log))
+
+# Using Naive Bayes
+
+from sklearn.naive_bayes import GaussianNB
+classifier_nb = GaussianNB() //create a model
+classifier_nb.fit(xtrain, ytrain)  //fitting training data
+
+y_pred_nb = classifier_nb.predict(xtest)
+
+# Evaluating performance of the model
+
+print("\nNaive Bayes Score:", classifier_nb.score(xtest, ytest))
+print("Naive Bayes Train Score:", classifier_nb.score(xtrain, ytrain))
+
+print("\nConfusion Matrix (Naive Bayes):")
+print(confusion_matrix(ytest, y_pred_nb))
+
+print("\nClassification Report (Naive Bayes):")
+print(classification_report(ytest, y_pred_nb))
+
+# Using Decision Tree
+
+from sklearn.tree import DecisionTreeClassifier
+classifier_tree = DecisionTreeClassifier()
+classifier_tree.fit(xtrain, ytrain)
+
+y_pred_tree = classifier_tree.predict(xtest)
+
+# Evaluating performance of the model
+
+print("\nDecision Tree Score:", classifier_tree.score(xtest, ytest))
+print("Decision Tree Train Score:", classifier_tree.score(xtrain, ytrain))
+
+print("\nConfusion Matrix (Decision Tree):")
+print(confusion_matrix(ytest, y_pred_tree))
+
+print("\nClassification Report (Decision Tree):")
+print(classification_report(ytest, y_pred_tree))
+
+# Taking user input to check if crop can be yield in given conditions or not
+
+features = ['N', 'P', 'K', 'temperature', 'humidity']
+feature_means = df[features].mean()
+
+print('\nEnter the following values (or press enter to use average):')
+user_input = []
+
+for feature in features:
+    value = input(f"{feature}: ")
+    if value:
+        user_input.append(float(value))
+    else:
+        user_input.append(feature_means[feature])
+
+user_input_np = np.array(user_input).reshape(1, -1)
+
+predicted_crop = classifier_tree.predict(user_input_np)
+
+crop_input = input("\nEnter the crop you plan to grow: ")
+if predicted_crop[0].lower() == crop_input.lower():
+    print("✅ Yes, this crop is suitable for your conditions.")
+else:
+    print("❌ No, this crop is not recommended based on your input.")
